@@ -1019,7 +1019,7 @@ scorresStructLemma name fields = let
   assums = [ "scorres " ++ x ++ " " ++ y ++ " \\<gamma> \\<xi>"
            | (x, y) <- P.zip (varNames "s") (varNames "d") ]
   concl = "scorres (" ++ name ++ ".make " ++ unwords (varNames "s") ++ ") " ++
-          "(Struct ts [" ++ intercalate ", " (varNames "d") ++ "]) \\<gamma> \\<xi>"
+          "(Struct ns ts [" ++ intercalate ", " (varNames "d") ++ "]) \\<gamma> \\<xi>"
   prop = "\\<And>" ++ intercalate " " all_names ++ ".\n" ++ intercalate " \\<Longrightarrow>\n" (assums ++ [concl])
   method = Method "clarsimp" ["simp:", "scorres_def", "valRel_" ++ name, name ++ ".defs",
                               "elim!:", "v_sem_elims"]

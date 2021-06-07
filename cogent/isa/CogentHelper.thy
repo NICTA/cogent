@@ -51,7 +51,7 @@ lemma typing_struct': "\<lbrakk> \<Xi>, K, \<Gamma> \<turnstile>* es : ts
                        ; distinct ns
                        ; map (fst \<circ> snd) ts' = ts
                        ; list_all (\<lambda>p. snd (snd p) = Present) ts'
-                       \<rbrakk> \<Longrightarrow> \<Xi>, K, \<Gamma> \<turnstile> Struct ts es : TRecord ts' Unboxed"
+                       \<rbrakk> \<Longrightarrow> \<Xi>, K, \<Gamma> \<turnstile> Struct ns ts es : TRecord ts' Unboxed"
   by (force intro: typing_struct simp add: zip_eq_conv_sym replicate_eq_map_conv_nth list_all_length)
 
 lemma typing_afun': "\<lbrakk> \<Xi> f = (ks, t, u)

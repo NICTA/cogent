@@ -117,7 +117,7 @@ where
                    \<rbrakk> \<Longrightarrow> \<xi> , \<gamma> \<turnstile> If x t e \<Down> r"
 
 | v_sem_struct  : "\<lbrakk> \<xi> , \<gamma> \<turnstile>* xs \<Down> vs
-                   \<rbrakk> \<Longrightarrow> \<xi> , \<gamma> \<turnstile> Struct ts xs \<Down> VRecord vs"
+                   \<rbrakk> \<Longrightarrow> \<xi> , \<gamma> \<turnstile> Struct ns ts xs \<Down> VRecord vs"
 
 | v_sem_take    : "\<lbrakk> \<xi> , \<gamma> \<turnstile> x \<Down> VRecord fs
                    ; \<xi> , (fs ! f # VRecord fs # \<gamma>) \<turnstile> e \<Down> e'
@@ -1145,7 +1145,7 @@ function monoexpr :: "'f expr \<Rightarrow> ('f \<times> type list) expr" where
 | "monoexpr (Prim p es)       = Prim p (map (monoexpr) es)"
 | "monoexpr (App a b)         = App (monoexpr a) (monoexpr b)"
 | "monoexpr (Con as t e)      = Con as t (monoexpr e)"
-| "monoexpr (Struct ts vs)    = Struct ts (map (monoexpr) vs)"
+| "monoexpr (Struct ns ts vs)    = Struct ns ts (map (monoexpr) vs)"
 | "monoexpr (Member v f)      = Member (monoexpr v) f"
 | "monoexpr (Unit)            = Unit"
 | "monoexpr (Cast t e)        = Cast t (monoexpr e)"
