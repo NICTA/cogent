@@ -21,16 +21,14 @@ begin
 
 ML \<open>
 
-fun bool_of_variant_state @{term Checked} = true
-| bool_of_variant_state @{term Unchecked} = false
-| bool_of_variant_state x = raise ERROR ("bool_of_variant_state: not a variant_state: " ^ @{make_string} x)
+fun bool_of_variant_state Checked = true
+| bool_of_variant_state Unchecked = false
 
 fun variant_state_of_bool true = @{term Checked}
 | variant_state_of_bool false = @{term Unchecked}
 
-fun get_checkeds_of_usum_uval ctxt uval =
-    usum_list_of_types ctxt uval |>
-    map (fn x => x |> HOLogic.dest_prod |> snd |> HOLogic.dest_prod |> snd |> bool_of_variant_state)
+fun get_checkeds_of_usum_uval uval =
+    usum_list_of_checked uval |>  map bool_of_variant_state
 
 \<close>
 
@@ -56,7 +54,7 @@ fun (uval1 can_be_casted_to uval2) ctxt heap_info =
     filter (fn (_,(a,b)) => a <> b)
  in
   if (field_names1 = field_names2) andalso (field_types1 = field_types2)
-  then case check_diff (get_checkeds_of_usum_uval ctxt uval1) (get_checkeds_of_usum_uval ctxt uval2) of
+  then case check_diff (get_checkeds_of_usum_uval uval1) (get_checkeds_of_usum_uval uval2) of
        (* Only if going from unchecked to checked *)
         [(ix,(false,true))] => SOME ix
        (* If multiple differences, or no differences, we don't need to worry about case *)
@@ -103,8 +101,8 @@ ML\<open> fun mk_case_prop from_uval to_uval variant_ctor_num file_nm ctxt =
   val nth_field_tag_name = nth_field_ml_tag_name |> Utils.encode_isa_string;
   val get_tag_names = fn uval => heap_info_uval_to_field_names heap uval |> tl |> map (unsuffix "_C");
   val from_tag_nms  = get_tag_names from_uval;
-  val from_tag_checks = get_checkeds_of_usum_uval ctxt from_uval
-  val to_tag_checks   = get_checkeds_of_usum_uval ctxt to_uval
+  val from_tag_checks = get_checkeds_of_usum_uval from_uval
+  val to_tag_checks   = get_checkeds_of_usum_uval to_uval
 
   val alternative_tys = map (fn n => Free ("alt_ty" ^ string_of_int n, @{typ "Cogent.type"}))
     (1 upto length from_tag_nms)
@@ -171,7 +169,7 @@ local
 
 fun mk_case_lem_name (from:uval) field_num ctxt =
  let
-  val cs = get_checkeds_of_usum_uval ctxt from
+  val cs = get_checkeds_of_usum_uval from
   val cs_str = cs |> map (fn b => if b then "C" else "U") |> String.concat
  in
   "corres_case_" ^ get_uval_name from ^ "_" ^ Int.toString field_num ^ "th_field_" ^ cs_str
@@ -221,7 +219,7 @@ fun mk_specialised_esac_lemma file_nm ctxt from_usum =
   val _               = tracing ("  mk_specialised_esac_lemma for " ^ from_C_nm)
   val thy             = Proof_Context.theory_of ctxt;
   val is_usum         = get_usums [from_usum] |> null |> not;
-  val with_checks     = map_index I (get_checkeds_of_usum_uval ctxt from_usum)
+  val with_checks     = map_index I (get_checkeds_of_usum_uval from_usum)
   val uncheckeds      = List.filter (fn (_,x) => not x) with_checks
  in
     case uncheckeds of

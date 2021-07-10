@@ -177,8 +177,11 @@ declare [[ cheat_specialised_lemmas = false ]]
 
 ML\<open> (* type definition on the ML-level.*)
 datatype sigil = ReadOnly | Writable | Unboxed
+
+datatype variant_state = Checked | Unchecked
+
 datatype uval = UProduct of string
-              | USum of string * term (* term contains argument to TSum (excluding TSum itself) *)
+              | USum of string * variant_state list (* for each constructor, whether it is checked or not *)
               | URecord of string * sigil
               | UAbstract of string;
 ;
@@ -193,7 +196,7 @@ fun unify_sigils (URecord (ty_name,_)) = URecord (ty_name,Writable)
 \<close>
 
 ML\<open> (* unify_usum_tys *)
-fun unify_usum_tys (USum (ty_name,_)) = USum (ty_name, Term.dummy)
+fun unify_usum_tys (USum (ty_name,_)) = USum (ty_name, [])
   | unify_usum_tys uval               = uval
 \<close>
 
@@ -234,13 +237,13 @@ ML\<open> val get_uval_readonly_records =
  filter (fn uval => case uval of (URecord (_, ReadOnly)) => true | _ => false);
 \<close>
 
-ML\<open> fun usum_list_of_types _ uval = case uval of
-    USum (_, variants) => HOLogic.dest_list variants
-  | _ => error ("usum_list_of_types: not USum")
+ML\<open> fun usum_list_of_checked uval = case uval of
+    USum (_, checked) => checked
+  | _ => error ("usum_list_of_checked: not USum")
 \<close>
 
 ML\<open> fun is_UAbstract (UAbstract _) = true
-      |  is_UAbstract  _            = false;
+      | is_UAbstract  _            = false;
 \<close>
 
 ML\<open> fun get_ty_nm_C uval = uval |> get_uval_name |> (fn nm => nm ^ "_C"); \<close>

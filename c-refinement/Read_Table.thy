@@ -61,13 +61,21 @@ fun read_table (file_name:string) thy =
       | decode_sigil _   ((Const (@{const_name Boxed}, _)) $ (Const (@{const_name ReadOnly}, _)) $ _) = ReadOnly
       | decode_sigil _   (Const (@{const_name Unboxed},  _)) = Unboxed
       | decode_sigil pos t = raise TERM (report pos ^ "bad sigil", [t]);
+      
+
+    fun decode_variant_state _ @{term Checked}   = Checked
+      | decode_variant_state _ @{term Unchecked} = Unchecked
+      | decode_variant_state pos t = raise TERM (report pos ^ "failed to parse variant state:", [t])
 
     fun decode_type (_, Const (@{const_name TCon}, _) $ _ $ _ $ _, cT) =
             UAbstract cT
       | decode_type (pos, Const (@{const_name TRecord}, _) $ _ $ sigil, cT) =
             URecord (cT, decode_sigil pos sigil)
-      | decode_type (_, Const (@{const_name TSum}, _) $ variants, cT) =
-            USum (cT, variants)
+      | decode_type (pos, Const (@{const_name TSum}, _) $ variants, cT) =
+            USum (cT, variants |> HOLogic.dest_list
+              |> map (fn x => x |> HOLogic.dest_prod |> snd |> HOLogic.dest_prod |> snd 
+                |> decode_variant_state pos
+             ))
       | decode_type (_, Const (@{const_name TProduct}, _) $ _ $ _, cT) =
             UProduct cT
       | decode_type (pos, t, _) =
