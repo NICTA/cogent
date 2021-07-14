@@ -491,8 +491,8 @@ qed (simp add: u_sem_all_empty)
 lemma corres_struct:
 assumes
  "\<And>\<sigma> s. (\<sigma>, s) \<in> srel \<Longrightarrow>
-  val_rel (URecord (zip (map (nth \<gamma>) xs) (map type_repr ts))) p"
-shows "corres srel (Struct ts (map Var xs)) (gets (\<lambda>_. p)) \<xi> \<gamma> \<Xi> \<Gamma> \<sigma> s"
+  val_rel (URecord (zip (map (nth \<gamma>) xs) (zip ns (map type_repr ts)))) p"
+shows "corres srel (Struct ns ts (map Var xs)) (gets (\<lambda>_. p)) \<xi> \<gamma> \<Xi> \<Gamma> \<sigma> s"
   by (fastforce intro: u_sem_struct u_sem_all_var simp: assms corres_def snd_return in_return)
 
 lemma corres_con:
@@ -701,8 +701,8 @@ lemma corres_take_boxed':
   (do _ \<leftarrow> guard (\<lambda>s. is_valid s x'); z \<leftarrow> gets f'; e' z od)
   \<xi> \<gamma> \<Xi> \<Gamma> \<sigma> s"
 proof -
-  have HELP: "\<And>tag t b. typ ! f = (tag, t, b) \<Longrightarrow> map (type_repr \<circ> fst \<circ> snd) typ = map (type_repr \<circ> fst \<circ> snd) (typ[f := (tag, t, Present)])"
-    by (simp add: map_update, metis (mono_tags, lifting) comp_def list_update_id map_update prod_injects(1))
+  have HELP: "\<And>tag t b. typ ! f = (tag, t, b) \<Longrightarrow> map (\<lambda> (n,t,_). (n, type_repr t)) typ = map (\<lambda> (n,t,_). (n, type_repr t)) (typ[f := (tag, t, Present)])"
+    by (simp add: map_update, metis (mono_tags, lifting)  old.prod.case list_update_id map_update prod_injects(1))
   show ?thesis
     apply (clarsimp simp: corres_def in_monad snd_bind snd_gets snd_state_assert)
     apply (rename_tac r w)
@@ -965,7 +965,7 @@ proof (clarsimp simp: corres_def in_monad snd_bind snd_modify snd_state_assert, 
 
   obtain fs w13
     where uval_typing1_elim_lemmas:
-      "repr = RRecord (map (\<lambda>(n, t, b). type_repr t) typ)"
+      "repr = RRecord (map (\<lambda>(n, t, b). (n, type_repr t)) typ)"
       "w13p = insert p w13"
       "\<Xi>, \<sigma> \<turnstile>* fs :ur typ \<langle>r13', w13\<rangle>"
       "\<sigma> p = Some (URecord fs)"
@@ -991,7 +991,7 @@ proof (clarsimp simp: corres_def in_monad snd_bind snd_modify snd_state_assert, 
         "w1p' = insert p w1'"
         "\<Xi>, \<sigma>(p \<mapsto> URecord (fs[f := (\<gamma> ! e, snd (fs ! f))])) \<turnstile>* (fs[f := (\<gamma> ! e, snd (fs ! f))]) :ur typ[f := (fst (typ ! f), fst (snd (typ ! f)), Present)] \<langle>r1', w1'\<rangle>"
         "distinct (map fst (typ[f := (fst (typ ! f), fst (snd (typ ! f)), Present)]))"
-        "repr = RRecord (map (type_repr \<circ> fst \<circ> snd) (typ[f := (fst (typ ! f), fst (snd (typ ! f)), Present)]))"
+        "repr = RRecord (map (\<lambda> (n,t,_). (n, type_repr t)) (typ[f := (fst (typ ! f), fst (snd (typ ! f)), Present)]))"
         "sgl = Boxed Writable ptrl"
         "p \<notin> w1'"
         "p \<notin> r1'"
@@ -1008,12 +1008,12 @@ proof (clarsimp simp: corres_def in_monad snd_bind snd_modify snd_state_assert, 
     by fastforce
 
   then have "\<Xi>, \<sigma>(p \<mapsto> URecord (fs[f := (\<gamma> ! e, snd (fs ! f))])) \<turnstile>
-              UPtr p (RRecord (map (type_repr \<circ> fst \<circ> snd) (typ[f := (fst (typ ! f), fst (snd (typ ! f)), Present)]))) :u
+              UPtr p (RRecord (map (\<lambda> (n,t,_). (n, type_repr t)) (typ[f := (fst (typ ! f), fst (snd (typ ! f)), Present)]))) :u
               TRecord typ (Boxed Writable ptrl)
             \<langle>r1'', insert p w1''\<rangle>"
     using rec_elim1_lemmas taken_field1_lemmas
   proof (intro u_t_p_rec_w')
-    show "RRecord (map (type_repr \<circ> fst \<circ> snd) (typ[f := (fst (typ ! f), fst (snd (typ ! f)), Present)])) = RRecord (map (type_repr \<circ> fst \<circ> snd) typ)"
+    show "RRecord (map (\<lambda> (n,t,_). (n, type_repr t)) (typ[f := (fst (typ ! f), fst (snd (typ ! f)), Present)])) = RRecord (map (\<lambda> (n,t,_). (n, type_repr t)) typ)"
       by (clarsimp, metis rec_elim1_lemmas(2) taken_field1_lemmas(3) type_repr_uval_repr(2))
   next
     show "distinct (map fst typ)"

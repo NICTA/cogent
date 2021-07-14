@@ -25,12 +25,18 @@ fun mk_rhs_of_type_rel_rec _ (field_info:HeapLiftBase.field_info list) =
  * We assume that there are (length field_info) bound variables
  * corresponding to the type repr for each field. *)
  let
+  val _ = @{print} field_info
   val num_fields = List.length field_info;
 
   (* mk_hd_conjct makes e.g. @{term "ty = TRecord [(''a'', a), (''b'', b)]"} in the body.*)
   val mk_hd_conjct =
    let
-    val ml_list_for_TRecord = map_index (fn (n, _) => Bound (num_fields - n - 1)) field_info;
+    fun make_name s = if String.isSuffix "_C" s then 
+                           (* remove the _C suffix *)
+                           String.substring (s, 0, String.size s - 2) 
+                      else error ("mk_rhs_of_type_rel_rec: not a C field " ^ s)
+    val ml_list_for_TRecord = map_index (fn (n, i ) =>
+     encode_isa_pair (HOLogic.mk_string (# name i |> make_name), Bound (num_fields - n - 1))) field_info;
     val RRecord = Const (@{const_name RRecord}, dummyT) $ mk_isa_list ml_list_for_TRecord
    in
     HOLogic.mk_eq (Free ("ty", dummyT), RRecord)

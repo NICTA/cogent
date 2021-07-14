@@ -30,7 +30,7 @@ where
 | "rename_expr rename (Prim p es)       = Prim p (map (rename_expr rename) es)"
 | "rename_expr rename (App a b)         = App (rename_expr rename a) (rename_expr rename b)"
 | "rename_expr rename (Con as t e)      = Con as t (rename_expr rename e)"
-| "rename_expr rename (Struct ts vs)    = Struct ts (map (rename_expr rename) vs)"
+| "rename_expr rename (Struct ns ts vs) = Struct ns ts (map (rename_expr rename) vs)"
 | "rename_expr rename (Member v f)      = Member (rename_expr rename v) f"
 | "rename_expr rename (Unit)            = Unit"
 | "rename_expr rename (Cast t e)        = Cast t (rename_expr rename e)"
@@ -147,7 +147,7 @@ next
     apply (case_tac vval, simp_all)
     by (fastforce intro!: v_sem_v_sem_all.v_sem_esac)
 next
-  case (v_sem_struct \<xi> xs vs ts \<gamma> e \<tau> \<Gamma>) then show ?case
+  case (v_sem_struct \<xi> xs vs ts \<gamma> ns e \<tau> \<Gamma>) then show ?case
     by (cases e) (fastforce intro: v_sem_v_sem_all.v_sem_struct)+
 next
   case (v_sem_if \<xi> rb b e1 e2 v \<gamma> e \<tau> \<Gamma>)

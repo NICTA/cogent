@@ -89,7 +89,7 @@ fun funcall_sem :: "'f InValue env \<Rightarrow> 'f expr \<Rightarrow> ('f FunCa
 | "funcall_sem \<gamma> (Con _ tag x) =
      (let (calls, ptrs) = funcall_sem \<gamma> x
       in (calls, map ((#) (InSum tag)) ptrs))"
-| "funcall_sem \<gamma> (Struct tys xs) =
+| "funcall_sem \<gamma> (Struct ns tys xs) =
      (let (callss, ptrss) = unzip (map (funcall_sem \<gamma>) xs)
       in (concat callss, concat (map (\<lambda>(n, v). map ((#) (InRecord n)) v) (enumerate 0 ptrss))))"
 | "funcall_sem \<gamma> (Member x f) =

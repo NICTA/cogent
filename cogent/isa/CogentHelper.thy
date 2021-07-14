@@ -51,7 +51,7 @@ lemma typing_struct': "\<lbrakk> \<Xi>, K, \<Gamma> \<turnstile>* es : ts
                        ; distinct ns
                        ; map (fst \<circ> snd) ts' = ts
                        ; list_all (\<lambda>p. snd (snd p) = Present) ts'
-                       \<rbrakk> \<Longrightarrow> \<Xi>, K, \<Gamma> \<turnstile> Struct ts es : TRecord ts' Unboxed"
+                       \<rbrakk> \<Longrightarrow> \<Xi>, K, \<Gamma> \<turnstile> Struct ns ts es : TRecord ts' Unboxed"
   by (force intro: typing_struct simp add: zip_eq_conv_sym replicate_eq_map_conv_nth list_all_length)
 
 lemma typing_afun': "\<lbrakk> \<Xi> f = (ks, t, u)
@@ -476,7 +476,7 @@ fun typing (Const (@{const_name Var}, _) $ i) G _ hints = let
              | _ => raise HINTS ("too many tacs", hints))
   in ([RTac @{thm typing_var_weak[unfolded singleton_def Cogent.empty_def]},
                 RTac thm, simp, WeakeningTac thms, simp_solve]) end
-  | typing (Const (@{const_name Struct}, _) $ _ $ xs) G ctxt hints
+  | typing (Const (@{const_name Struct}, _) $ _ $ _ $ xs) G ctxt hints
   = (case dest_all_vars xs of SOME ixs => let
       val _ = (case typing_hint hints of
                  [] => ()
@@ -645,7 +645,7 @@ fun termName (Const (@{const_name AFun}, _) $ _ $ _)          = "AFun"
   | termName (Const (@{const_name Prim}, _) $ _ $ _)          = "Prim"
   | termName (Const (@{const_name App}, _) $ _ $ _)           = "App"
   | termName (Const (@{const_name Con}, _) $ _ $ _ $ _)       = "Con"
-  | termName (Const (@{const_name Struct}, _) $ _ $ _)        = "Struct"
+  | termName (Const (@{const_name Struct}, _) $ _ $ _ $ _)    = "Struct"
   | termName (Const (@{const_name Member}, _) $ _ $ _)        = "Member"
   | termName (Const (@{const_name Unit}, _))                  = "App"
   | termName (Const (@{const_name Lit}, _) $ _)               = "Lit"

@@ -337,7 +337,7 @@ next
         "w1' = insert p w1''"
         "\<Xi>, \<sigma>'' \<turnstile>* fs :ur ts \<langle>r1', w1''\<rangle>"
         "\<sigma>'' p = Some (URecord fs)"
-        "r' = RRecord (map (type_repr \<circ> fst \<circ> snd) ts)"
+        "r' = RRecord (map (\<lambda> (n,t,_). (n, type_repr t)) ts)"
         "distinct (map fst ts)"
         "s = Boxed Writable ptrl"
         "p \<notin> w1''"
@@ -388,9 +388,9 @@ next
         proof (simp only: snd_t\<Gamma>4_is append_Cons append.left_neutral, intro matches_ptrs_some[OF _ matches_ptrs_some])
           have "\<Xi>, \<sigma>'' \<turnstile>* fs :ur ts[f := (n, t, taken)] \<langle>r1a, w1a\<rangle>"
             by (simp add: ut_fs_taken_f Taken)
-          moreover have "r' = RRecord (map (type_repr \<circ> fst \<circ> snd) (ts[f := (n, t, taken)]))"
-              using Taken type_repr_uval_repr uptr_p_elim_lemmas ut_fs_taken_f
-              by (metis (full_types))
+          moreover have "r' = RRecord (map (\<lambda> (n,t,_). (n, type_repr t)) (ts[f := (n, t, taken)]))"
+            using Taken type_repr_uval_repr uptr_p_elim_lemmas ut_fs_taken_f            
+            by metis
           ultimately show "\<Xi>, \<sigma>'' \<turnstile> UPtr p r' :u TRecord (ts[f := (n, t, taken)]) s \<langle>r1a, insert p w1a\<rangle>"
             using uptr_p_elim_lemmas ut_fs_taken_f r1'_is w1''_is
             by (simp, intro u_t_p_rec_w';

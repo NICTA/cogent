@@ -319,7 +319,7 @@ datatype 'f expr = Var index
                  | Prim prim_op "'f expr list"
                  | App "'f expr" "'f expr"
                  | Con "(name \<times> type \<times> variant_state) list" name "'f expr"
-                 | Struct "type list" "'f expr list"
+                 | Struct "name list" "type list" "'f expr list"
                  | Member "'f expr" field
                  | Unit
                  | Lit lit
@@ -473,7 +473,7 @@ fun specialise :: "type substitution \<Rightarrow> 'f expr \<Rightarrow> 'f expr
 | "specialise \<delta> (Prim p es)       = Prim p (map (specialise \<delta>) es)"
 | "specialise \<delta> (App a b)         = App (specialise \<delta> a) (specialise \<delta> b)"
 | "specialise \<delta> (Con as t e)      = Con (map (\<lambda> (c,t,b). (c, instantiate \<delta> t, b)) as) t (specialise \<delta> e)"
-| "specialise \<delta> (Struct ts vs)    = Struct (map (instantiate \<delta>) ts) (map (specialise \<delta>) vs)"
+| "specialise \<delta> (Struct ns ts vs)    = Struct ns (map (instantiate \<delta>) ts) (map (specialise \<delta>) vs)"
 | "specialise \<delta> (Member v f)      = Member (specialise \<delta> v) f"
 | "specialise \<delta> (Unit)            = Unit"
 | "specialise \<delta> (Cast t e)        = Cast t (specialise \<delta> e)"
@@ -800,7 +800,7 @@ typing_var    : "\<lbrakk> K \<turnstile> \<Gamma> \<leadsto>w singleton (length
                    ; distinct ns
                    ; length ns = length ts
                    ; ts' = zip ns (zip ts (replicate (length ts) Present))
-                   \<rbrakk> \<Longrightarrow> \<Xi>, K, \<Gamma> \<turnstile> Struct ts es : TRecord ts' Unboxed"
+                   \<rbrakk> \<Longrightarrow> \<Xi>, K, \<Gamma> \<turnstile> Struct ns ts es : TRecord ts' Unboxed"
 
 | typing_member : "\<lbrakk> \<Xi>, K, \<Gamma> \<turnstile> e : TRecord ts s
                    ; K \<turnstile> TRecord ts s :\<kappa> k
@@ -857,7 +857,7 @@ inductive_cases typing_caseE   [elim]: "\<Xi>, K, \<Gamma> \<turnstile> Case x t
 inductive_cases typing_esacE   [elim]: "\<Xi>, K, \<Gamma> \<turnstile> Esac e t : \<tau>"
 inductive_cases typing_castE   [elim]: "\<Xi>, K, \<Gamma> \<turnstile> Cast t e : \<tau>"
 inductive_cases typing_letE    [elim]: "\<Xi>, K, \<Gamma> \<turnstile> Let a b : \<tau>"
-inductive_cases typing_structE [elim]: "\<Xi>, K, \<Gamma> \<turnstile> Struct ts es : \<tau>"
+inductive_cases typing_structE [elim]: "\<Xi>, K, \<Gamma> \<turnstile> Struct ns ts es : \<tau>"
 inductive_cases typing_letbE   [elim]: "\<Xi>, K, \<Gamma> \<turnstile> LetBang vs a b : \<tau>"
 inductive_cases typing_takeE   [elim]: "\<Xi>, K, \<Gamma> \<turnstile> Take x f e : \<tau>"
 inductive_cases typing_putE    [elim]: "\<Xi>, K, \<Gamma> \<turnstile> Put x f e : \<tau>"
@@ -876,7 +876,7 @@ inductive atom ::"'f expr \<Rightarrow> bool" where
 | "atom (AFun f ts)"
 | "atom (Prim p (map Var is))"
 | "atom (Con ts n (Var x))"
-| "atom (Struct ts (map Var is))"
+| "atom (Struct ns ts (map Var is))"
 | "atom (Cast t (Var x))"
 | "atom (Member (Var x) f)"
 | "atom Unit"
@@ -915,7 +915,7 @@ datatype repr = RPtr repr
               | RPrim prim_type
               | RSum "(name \<times> repr) list"
               | RProduct "repr" "repr"
-              | RRecord "repr list"
+              | RRecord "(name \<times> repr) list"
               | RUnit
 
 fun type_repr :: "type \<Rightarrow> repr" where
@@ -925,8 +925,8 @@ fun type_repr :: "type \<Rightarrow> repr" where
 | "type_repr (TProduct a b)       = RProduct (type_repr a) (type_repr b)"
 | "type_repr (TCon n ts Unboxed)  = RCon n (map type_repr ts)"
 | "type_repr (TCon n ts _)        = RPtr (RCon n (map type_repr ts))"
-| "type_repr (TRecord ts Unboxed) = RRecord (map (\<lambda>(_,b,_). type_repr b) ts)"
-| "type_repr (TRecord ts _)       = RPtr (RRecord (map (\<lambda>(_,b,_). type_repr b) ts))"
+| "type_repr (TRecord ts Unboxed) = RRecord (map (\<lambda>(n,b,_). (n, type_repr b)) ts)"
+| "type_repr (TRecord ts _)       = RPtr (RRecord (map (\<lambda>(n,b,_). (n, type_repr b)) ts))"
 | "type_repr (TUnit)              = RUnit"
 
 
@@ -1553,7 +1553,8 @@ qed auto
 
 lemma subtyping_preserves_type_repr_map:
   "list_all2 (\<lambda>p1 p2. [] \<turnstile> fst (snd p1) \<sqsubseteq> fst (snd p2)) as bs
-  \<Longrightarrow> map (type_repr \<circ> fst \<circ> snd) as = map (type_repr \<circ> fst \<circ> snd) bs"
+  \<Longrightarrow> map fst as = map fst bs
+  \<Longrightarrow> map (\<lambda> (n,t,_). (n, type_repr t)) as = map (\<lambda> (n,t,_). (n, type_repr t)) bs"
   by (induct rule: list_all2_induct, auto simp add: subtyping_preserves_type_repr)
 
 
@@ -2217,7 +2218,7 @@ fun expr_size :: "'f expr \<Rightarrow> nat" where
 | "expr_size (Prim p as) = Suc (sum_list (map expr_size as))"
 | "expr_size (Var v) = 0"
 | "expr_size (AFun v va) = 0"
-| "expr_size (Struct v va) = Suc (sum_list (map expr_size va))"
+| "expr_size (Struct ns v va) = Suc (sum_list (map expr_size va))"
 | "expr_size (Lit v) = 0"
 | "expr_size (SLit s) = 0"
 | "expr_size (Tuple v va) = Suc ((expr_size v) + (expr_size va))"
