@@ -995,26 +995,21 @@ fun make_uabsfuns_defs (tr as CogentCallTree (depth, _, _, _)) = let
                                                maps (fn arg => collect_absfuns d (snd arg) []) args) calls
     in map (fn d => collect_absfuns d tr []) (0 upto depth) end
 
-(* Define each of the \<xi>_n. *)
-fun define_uabsfuns (defs : string list list) ctxt : ((term * (string * thm)) list * Proof.context) = let
-  fun define _ [] ctxt = ([], ctxt)
-    | define n (absfuns::defs') ctxt = let
-        val name = "\<xi>_" ^ string_of_int n
-        val typ = @{typ "(funtyp, abstyp, ptrtyp) uabsfuns"}
-        val rhs = Const (@{const_name undefined}, typ) (* FIXME *)
-        val (thm, ctxt) = Specification.definition
-              NONE [] [] ((Binding.name (name ^ "_def"), []),
-                      @{mk_term "?name \<equiv> ?def" (name, def)} (Free (name, typ), rhs)) ctxt
-        val (thms, ctxt) = define (n+1) defs' ctxt
-        in (thm::thms, ctxt) end
-  in define 0 defs ctxt end
+(* Declare each of the \<xi>_n as a const. *)
+fun declare_uabsfuns' _ [] thy  = thy
+  | declare_uabsfuns' n (_::defs) thy = let
+      val name = "\<xi>_" ^ string_of_int n
+      val typ = @{typ "(funtyp, abstyp, ptrtyp) uabsfuns"}
+      val ctxt = thy |> Toplevel.theory_toplevel |> Toplevel.context_of
+      val (_, thy') = Sign.declare_const ctxt ((Binding.name name, typ) , NoSyn) thy
+      in declare_uabsfuns' (n+1) defs thy'
+      end
 
 (* Convenience wrapper. *)
-fun define_uabsfuns' tr ctxt =
+fun declare_uabsfuns tr thy =
   make_uabsfuns_defs tr
   |> map (map #2 o filter (fn (funtyp, _, _) => funtyp = AbsFun))
-  |> (fn defs => define_uabsfuns defs ctxt)
-  |> snd
+  |> (fn defs => declare_uabsfuns' 0 defs thy)
 
 fun isAutoCorresFunRec ctxt f =
   (Proof_Context.get_thms ctxt (f ^ "'.simps"); true)
