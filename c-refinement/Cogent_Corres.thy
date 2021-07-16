@@ -20,7 +20,7 @@ theory Cogent_Corres
 begin
 
 locale update_sem_init = update_sem +
-constrains abs_typing :: "abstyp \<Rightarrow> name \<Rightarrow> type list \<Rightarrow> sigil \<Rightarrow> ptrtyp set \<Rightarrow> ptrtyp set \<Rightarrow> bool"
+constrains abs_typing :: "abstyp \<Rightarrow> name \<Rightarrow> type list \<Rightarrow> sigil \<Rightarrow> ptrtyp set \<Rightarrow> ptrtyp set \<Rightarrow> (funtyp, abstyp, ptrtyp) store \<Rightarrow> bool"
        and abs_repr :: "abstyp \<Rightarrow> name \<times> repr list"
 
 context update_sem_init

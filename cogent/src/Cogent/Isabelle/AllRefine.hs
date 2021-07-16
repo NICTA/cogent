@@ -110,9 +110,9 @@ initFinalLocale thy output = TheoryString $ unlines
   , "locale " ++ thy ++ "_cogent_shallow ="
   , "  \"" ++ output ++ "\" + correspondence +"
   , "  constrains val_abs_typing :: \"'b \\<Rightarrow> name \\<Rightarrow> type list \\<Rightarrow> bool\""
-  , "         and upd_abs_typing :: \"abstyp \\<Rightarrow> name \\<Rightarrow> type list \\<Rightarrow> sigil \\<Rightarrow> ptrtyp set \\<Rightarrow> ptrtyp set \\<Rightarrow> bool\""
+  , "         and upd_abs_typing :: \"abstyp \\<Rightarrow> name \\<Rightarrow> type list \\<Rightarrow> sigil \\<Rightarrow> ptrtyp set \\<Rightarrow> ptrtyp set \\<Rightarrow> (funtyp, abstyp, ptrtyp) store \\<Rightarrow> bool\""
   , "         and abs_repr       :: \"abstyp \\<Rightarrow> name \\<times> repr list\""
-  , "         and abs_upd_val    :: \"abstyp \\<Rightarrow> 'b \\<Rightarrow> char list \\<Rightarrow> Cogent.type list \\<Rightarrow> sigil \\<Rightarrow> " ++ wordSize ++ " word set \\<Rightarrow> " ++ wordSize ++ " word set \\<Rightarrow> bool\""
+  , "         and abs_upd_val    :: \"abstyp \\<Rightarrow> 'b \\<Rightarrow> char list \\<Rightarrow> Cogent.type list \\<Rightarrow> sigil \\<Rightarrow> " ++ wordSize ++ " word set \\<Rightarrow> " ++ wordSize ++ " word set \\<Rightarrow> (char list, abstyp, " ++ wordSize ++ " word) store \\<Rightarrow> bool\""
   ]
  where wordSize = show $ primIntSizeBits machineWordType
 
