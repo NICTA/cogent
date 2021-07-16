@@ -77,7 +77,8 @@ verification:
 		$(COGENT_FLAGS) \
 		--infer-c-funcs="$(PLAT_DIR)/$(ACFILES)" \
 		--proof-input-c=wrapper_pp_inferred.c \
-		--proof-name=$(NAME) \
+		--proof-name=$(NAME) 
+	cp "$(BUILD_DIR)/$(OUTPUT).table" "$(BUILD_DIR)/wrapper_pp_inferred.table"
 
 clean:
 	rm -rf $(BUILD_DIR)

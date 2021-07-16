@@ -122,7 +122,7 @@ context thy cfile fns ent =
   hofHints cfile ++
   checkHofHints ++
   cogentMainTree thy ent ++
-  xiN ++
+  xiN thy ++
   changeType ++
   corresThm ++
   runProof ++
@@ -228,8 +228,8 @@ cogentMainTree thy ent =
   , "\\<close>"
   ]
 
-xiN :: [String]
-xiN =
+xiN :: String -> [String]
+xiN thy =
   [ "(* Define \\<xi>_n. *)"
   , "ML \\<open>"
   , "(* FIXME: actually merge trees for uabsfuns *)"
@@ -238,7 +238,13 @@ xiN =
   , "    CogentCallTree_data tr ="
   , "    (Symtab.dest Cogent_main_tree |> map snd |> map CogentCallTree_data |> maximum))"
   , "\\<close>"
-  , "local_setup \\<open> define_uabsfuns' deepest_tree \\<close>"
+  , ""
+  , "end (* of context *)"
+  , ""
+  , "setup \\<open> declare_uabsfuns deepest_tree \\<close>"
+  , ""
+  , "context " ++ thy ++ " begin"
+  , ""
   ]
 
 changeType :: [String]
